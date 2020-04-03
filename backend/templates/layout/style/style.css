@@ -15,6 +15,14 @@ body{
 
 }
 
+.btn-block:hover {
+    text-decoration: none;
+}
+
+.popover {
+    z-index: 999999;
+}
+
 .score-means{
     border: 1px solid #dddddd;
     border-radius: 6px;

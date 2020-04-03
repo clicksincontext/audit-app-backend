@@ -131,7 +131,7 @@
     </div>
 </section>
 <!--Search Audit Results Section End-->
-
+<a href="#" data-toggle="popover" title="Popover Header" data-content="Some content inside the popover">Toggle popover</a>
 
 <!--List Of Bits Start-->
 <section class="list-of-bits">
@@ -141,6 +141,7 @@
                 <h2>Performed Search Checks</h2>
             </div>
         </div>
+
         <div class="row">
            <!-- TODO: repeat cards based on $data -->
 
@@ -174,7 +175,8 @@
                         <!-- <img src= "img/icons/analytics.svg"> -->
                         <div class="count">{{ check.scored }} </div>
                         <div class="bit-description">{{ check.description }} </div>
-                        <div class="btn-block mt-auto test2-{{check.flag}}" data-toggle="popover" data-content="{{ check.long_description }}">
+
+                        <a href="#" class="btn-block mt-auto test2-{{check.flag}}" data-toggle="popover" data-trigger="hover" data-content="{{ check.long_description }}">
                             {% if check.flag == 'red' %}
                                 Test Failed
                             {% elif check.flag == 'green' %}
@@ -183,7 +185,7 @@
                                 Test Passed Partly
                             {% endif %}
 
-                        </div>
+                        </a>
                     </div>
                 </div>
             {% endfor %}
@@ -413,5 +415,11 @@
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script>
+$(document).ready(function(){
+  $('[data-toggle="popover"]').popover();
+});
+</script>
+
 </body>
 </html>
