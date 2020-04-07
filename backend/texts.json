@@ -1,0 +1,164 @@
+[
+    {
+      "name": "conversions_check",
+      "type": "account-wide",
+      "description": "Any conversions set up in tools>conversions?",
+      "long_description": "If you are not measuring conversions, your spend is completely blind. This is a BIG red flag."
+    },
+    {
+      "name": "broad_modifiers_check",
+      "type": "search",
+      "description": "Full broad matches (not modifier)",
+      "long_description": "Broad match = printing money for Google, who make it way, way too broad and irrelevant."
+    },
+    {
+      "name": "short_modifiers_check",
+      "type": "search",
+      "description": "1 or 2 word Broad Match Modifiers",
+      "long_description": "Similar to broad match issues, 1 and 2 work broad match modifiers are a flag to be investigated."
+    },
+    {
+      "name": "mobile_firendly_pages",
+      "type": "account-wide",
+      "description": "Landing pages are mobile friendly",
+      "long_description": "Most internet browsing is now on mobile, so mobile friendly landing pages are mandatory."
+    },
+    {
+      "name": "landing_home_pages",
+      "type": "account-wide",
+      "description": "Landing Page = homepage (no /anything at end of URL)",
+      "long_description": "Home pages tend to be general - specific keyword-related pages are usually optimum."
+    },
+    {
+      "name": "low_quality_keywords",
+      "type": "search",
+      "description": "No keywords with quality score <5",
+      "long_description": "Low quality score = much higher CPCs compared to your competitors."
+    },
+    {
+      "name": "has_negatives",
+      "type": "search",
+      "description": "Has Negatives",
+      "long_description": "Negatives are keyword matches you do NOT want. If negatives don't exist, it indicates waste."
+    },
+    {
+      "name": "account_url_template",
+      "type": "account-wide",
+      "description": "Account has an URL Template",
+      "long_description": "If a pro is working on your account, you will have account templates for superior tracking and/or fraud detection."
+    },
+    {
+      "name": "has_more3_ads",
+      "type": "search",
+      "description": "Ad groups have three or more ads",
+      "long_description": "Always be beating your own ad copy."
+    },
+    {
+      "name": "search_ctr",
+      "type": "search",
+      "description": "Search CTR is Less Than 3%",
+      "long_description": "Any search campaign <3% CTR is a red flag and needs priority investigation."
+    },
+    {
+      "name": "ave_position",
+      "type": "search",
+      "description": "Search Top Impression rate is Better than 30%",
+      "long_description": "There is a lot of wasted opportunity going on, you are losing the battles."
+    },
+    {
+      "name": "have_trials",
+      "type": "account-wide",
+      "description": "High spending account has experiments happening",
+      "long_description": "Any decent-volume account should be experimenting. For example, with alternative bid strategies."
+    },
+    {
+      "name": "has_modifiers",
+      "type": "account-wide",
+      "description": "CPC campaigns have bid modifiers in place",
+      "long_description": "If manually bidding with CPC, bid-modifiers based on conversion maths should be in place or the setup is suboptimal."
+    },
+    {
+      "name": "has_customizers",
+      "type": "search",
+      "description": "Account has ad customized feeds",
+      "long_description": "If you're not using customized feeds, your ads aren't as personalised as they could be."
+    },
+    {
+      "name": "bid_strategy",
+      "type": "account-wide",
+      "description": "Account has non manual strategies (applicable for spending over 3K)",
+      "long_description": "Any decent-spending account should be trying 'smart' bidding strategies. They don't always work, but should be regularly tested."
+    },
+    {
+      "name": "has_customizers",
+      "type": "search",
+      "description": "Account has ad customized feeds",
+      "long_description": "DMYTRO - COPY OF ROW 15"
+    },
+    {
+      "name": "location_interested",
+      "type": "account-wide",
+      "description": "Location targeting set to \"physically in\" location, not \"interested in\" default",
+      "long_description": "NOT APPLICABLE ANY MORE I DON'T THINK?"
+    },
+    {
+      "name": "extensions_in_use",
+      "type": "search",
+      "description": "Extensions in use (min 3x types)",
+      "long_description": "Extensions make your ad bigger - more ad real estate = better CTRs"
+    },
+    {
+      "name": "channel_type_list",
+      "type": "account-wide",
+      "description": "Display + Video + Shopping - which are set up/had traffic",
+      "long_description": "-"
+    },
+    {
+      "name": "top_placements",
+      "type": "display",
+      "description": "Top Placements",
+      "long_description": "These are where your ads are showing most. Watch out for children's TV & VPN apps (if not relevant to your service) - these are typically waste"
+    },
+    {
+      "name": "ctr15_placements",
+      "type": "display",
+      "description": "Placements with 15%+ CTR (probably fraud)",
+      "long_description": "These placements are at best forced click placements, and very possibly fraud. Scrutinise any conversions here closely"
+    },
+    {
+      "name": "cr15_placements",
+      "type": "display",
+      "description": "Placements with 15%+ Conversion (probably not real conversions)",
+      "long_description": "If it looks too good to be true, it usually is. Track this placement through to sale and see if they are dodgy looking signups!"
+    },
+    {
+      "name": "display_ks_targeting",
+      "type": "display",
+      "description": "Keyword targeting exists",
+      "long_description": "On GDN, all targeting options have their merits and drawbacks. This tells you where you might be missing out."
+    },
+    {
+      "name": "display_topics_targeting",
+      "type": "display",
+      "description": "Topic targeting exists",
+      "long_description": "On GDN, all targeting options have their merits and drawbacks. This tells you where you might be missing out."
+    },
+    {
+      "name": "display_audience_targeting",
+      "type": "display",
+      "description": "Audience targeting exists",
+      "long_description": "On GDN, all targeting options have their merits and drawbacks. This tells you where you might be missing out."
+    },
+    {
+      "name": "display_placement_targeting",
+      "type": "display",
+      "description": "Placement targeting exists",
+      "long_description": "On GDN, all targeting options have their merits and drawbacks. This tells you where you might be missing out."
+    },
+    {
+      "name": "account_stats",
+      "type": "account-wide",
+      "description": "Overall account stats",
+      "long_description": "-"
+    }
+  ]
