@@ -263,6 +263,10 @@ def dummy(num):
         d = json.load(f)
         return flask.render_template('index_new.html', data=d, profile={ 'id': 'XXX123XXX', 'name': 'dummy account' })
 
+@app.route('/dummy/cookie')
+def send_cookie():
+    return f"{flask.request.cookies}"
+
 @app.route('/audit/<customerId>')
 def check2_0(customerId):
 

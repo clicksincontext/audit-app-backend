@@ -1,5 +1,6 @@
 backend/creds/
 backend/bin/
+backend/res_env/
 backend/log/
 backend/lib/
 backend/include/
