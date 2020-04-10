@@ -82,7 +82,7 @@ a.pdf-btn{
     font-weight: 700;
     margin-bottom: 50px;
     color: #353535;
-    margin-top: 120px;
+    margin-top: 80px;
 }
 
 .table-responsive{
@@ -117,9 +117,9 @@ a.pdf-btn{
 
 
 /*List Of Bits Start*/
-.list-of-bits{
+/* .list-of-bits{
     margin-top: 140px;
-}
+} */
 
 .list-of-bits .bit-box{
     margin-top: 30px;
@@ -237,11 +237,16 @@ a.pdf-btn{
     text-transform: uppercase;
 }
 
+#mprint {
+    display: none;
+}
+
 /*.test-failed, .test-passed, .test-passed-partly{*/
     /*bottom: 40px;*/
     /*left: 40px;*/
     /*right: 40px;*/
 /*}*/
+
 
 @media only screen and (max-width: 768px) {
     .bit-box{

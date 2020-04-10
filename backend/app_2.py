@@ -59,6 +59,9 @@ static_folder = "templates/layout",
 template_folder = "templates/layout")
 
 app.secret_key = 'cqoOyBUDkUpVsxIilDZRUcEV'
+app.config['JSON_AS_ASCII'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = False
+
 
 async def asyncator(loop, func, *args, **kwargs):
     parted = functools.partial(func, **kwargs)
@@ -261,7 +264,7 @@ def dummy(num):
         file_name = 'dummy2.json'
     with open(file_name) as f:
         d = json.load(f)
-        return flask.render_template('index_new.html', data=d, profile={ 'id': 'XXX123XXX', 'name': 'dummy account' })
+        return flask.render_template('index_new_1.html', data=d, profile={ 'id': 'XXX123XXX', 'name': 'dummy account' })
 
 @app.route('/dummy/cookie')
 def send_cookie():
@@ -361,7 +364,7 @@ def check2_0(customerId):
 
     app.logger.info(flask.request.args.get('template', default = 'skip'))
     if flask.request.args.get('template', default = 'skip') != 'skip':
-        return flask.render_template('index_new.html', data=response, profile=get_profile(customerId))
+        return flask.render_template('index_new_1.html', data=response, profile=get_profile(customerId))
     return flask.jsonify(response)
 
 @app.route('/audit/<customerId>/debug/<check_name>')
