@@ -455,7 +455,7 @@
             if (document.location.host.match('localhost')) url = 'http://localhost:5001/cic-ads-audit-frb/us-central1/html2pdf'
             var paramUrl = `${url}?url=${window.location.href}&session=${getCookie('session')}`.replace(/\#/g, '')
 
-            fetch(`${url}?url=${window.location.href}&session=${getCookie('session')}`)
+            fetch(paramUrl)
                 .then(r => r.blob())
                 .then(showFile)
         }
