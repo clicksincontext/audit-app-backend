@@ -23,6 +23,9 @@ from flask.logging import default_handler
 import functools
 import inspect
 import json
+from flask_mail import Mail, Message
+import smtplib
+
 
 
 import firebase_admin
@@ -63,6 +66,22 @@ app.config['JSON_AS_ASCII'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = False
 
 
+mail_settings = {
+    "MAIL_SERVER": 'smtp.gmail.com',
+    "MAIL_PORT": 465,
+    "MAIL_USE_TLS": False,
+    "MAIL_USE_SSL": True,
+    # 'MAIL_PORT': 587,
+    # 'MAIL_USE_TLS': True,
+    "MAIL_USERNAME": 'requests@clicksincontext.com',
+    "MAIL_PASSWORD": '%jSUbL6T'
+}
+
+
+app.config.update(mail_settings)
+mail = Mail(app)
+
+
 async def asyncator(loop, func, *args, **kwargs):
     parted = functools.partial(func, **kwargs)
     result = await loop.run_in_executor(None, parted, *args)
@@ -72,13 +91,6 @@ async def asyncator(loop, func, *args, **kwargs):
 def hello_world():
     app.logger.info('app started successfully')
     return flask.render_template('start_some.html')
-
-    if not app.debug:
-        @app.route('/', defaults={'path': ''})
-        @app.route('/<path:path>')
-        def catch_all(path):
-            return flask.render_template("start_some.html")
-
 
 def getAuthUrl(flask_session, local_proxy=False, redirect='oauth_callback'):
     m_scopes=[oauth2.GetAPIScope('adwords'),
@@ -102,15 +114,6 @@ def getAuthUrl(flask_session, local_proxy=False, redirect='oauth_callback'):
     flask_session['fl_client_type'] = flow.client_type
     flask_session['fl_code_verifier'] = flow.code_verifier
     return authorization_url
-
-def get_profile(clientId):
-    adwords_client = get_adwords_client()
-    adwords_client.SetClientCustomerId(clientId)
-    customer_service = adwords_client.GetService('CustomerService', version='v201809')
-    account = customer_service.getCustomers()
-
-
-    return { 'id': account[0]['customerId'], 'name': account[0]['descriptiveName'] }
 
 @app.route('/oauth_callback')
 def oauth_redirected_callback():
@@ -253,10 +256,6 @@ def auth_redirect():
     app.logger.info(f"session keys are {flask.session.keys()}")
     return flask.redirect(auth_url)
 
-# @app.route('/test_format')
-# def test_format():
-#     return flask.render_template('test_format.html', num = 0.81 )
-
 @app.route('/audit/dummy/<num>')
 def dummy(num):
     file_name = 'dummy.json'
@@ -274,34 +273,26 @@ def send_cookie():
 def check2_0(customerId):
 
     app.logger.info(f"starting check for customer {customerId}")
-    app.logger.info(f"{flask.request.cookies}")
-    SCOPES = ['https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/spreadsheets']
+    adwords_client = get_adwords_client()
 
-    creds = None
+    today_str = datetime.datetime.today().strftime('%Y-%m-%d')
 
-    user = flask.session['user']
+    user = flask.session.get('user')
+    if user is None:
+        return "Session cookie is corrupted", 404
 
     # Reference to firebase user document
-    lead_ref = db.collection('leads').document(user['gid'])
-    adwords_client = get_adwords_client()
-    adwords_client.SetClientCustomerId(customerId)
-    # customer_service = adwords_client.GetService('CustomerService', version='v201809')
-    # account = customer_service.getCustomers()[0]
+    audit_id = str(datetime.datetime.utcnow().timestamp()) + '.' + customerId
+    audit_data_ref = db.collection('audits')
 
-    try:
-        lead_data = lead_ref.get().to_dict()
-        if lead_data is None:
-            #user doesn't exists
-            lead_data = {
-                'id': user['gid'],
-                'name' : user['name'],
-                'email' : user['email'],
-                'checks': { customerId : [] }
-            }
-            lead_ref.set(lead_data)
-    except google.cloud.exceptions.NotFound:
+
+    lead_ref = db.collection('leads').document(user['gid'])
+    adwords_client.SetClientCustomerId(customerId)
+
+    #picking lead data
+    lead_data = lead_ref.get().to_dict()
+    if lead_data is None:
+        #user doesn't exists
         lead_data = {
             'id': user['gid'],
             'name' : user['name'],
@@ -309,8 +300,36 @@ def check2_0(customerId):
             'checks': { customerId : [] }
         }
         lead_ref.set(lead_data)
- 
-    results = []
+    
+    #picking account data
+    account_data_ref = db.collection('accounts').document(customerId)
+
+    # collecting basic account stats
+    account_profile = get_profile(customerId)
+    account_12mth_report_data = checks.account_stats_12months(adwords_client)
+
+    # ```
+    # Sample account 12m stats data:
+    # {
+    #     'SEARCH': {'Cost': 22963.69, 'AverageCpc': 0.000137, 'CostPerConversion': 137.490587},
+    #     'CONTENT': {'Cost': 3383.181872, 'AverageCpc': 0.000676, 'CostPerConversion': 676.636374},
+    #     'MIXED': {'Cost': 14155.697746, 'AverageCpc': 8.3e-05, 'CostPerConversion': 83.309647},
+    #     'TOTAL': {'Cost': 40502.569618, 'AverageCpc': 0.000118, 'CostPerConversion': 118.426119}
+    # }
+    # ```
+    extra_info = { 'date' : today_str,
+    'audit_url': flask.url_for('restore_audit',audit_id=audit_id,  _external=True),
+    'user': user['gid'],
+    'account_name':     account_profile['name'],
+    'customer_id': customerId,
+    'currency':     account_profile['currency']
+    }
+            
+
+    account_12mth_report_data.update(extra_info)
+    account_data_ref.set(account_12mth_report_data)
+    
+    results = []    
     total_score = 0
     max_score = 0
     typed_score = {}
@@ -322,7 +341,7 @@ def check2_0(customerId):
     app.logger.info('starting async jobs')
 
 
-
+    # async checks processing
     for item in checks.check_list :
         item['imagename'] = None
         queue.append(asyncator(loop, item['apply'], adwords_client, item, list=True))
@@ -331,6 +350,8 @@ def check2_0(customerId):
     return_exceptions=True
     ))
     loop.close()
+
+    # check results collection
     account_stats = None
     app.logger.info('quering async jobs results')
     for idx, async_res in enumerate(async_resutls):
@@ -351,6 +372,7 @@ def check2_0(customerId):
             app.logger.exception(async_res)
             results.append({ 'name': item.get('name',  'unknown'), 'error': 'no data' })
     app.logger.info('async jobs ready')
+
     if account_stats is not None:
         network_data = { row[1]:row[2] for row in account_stats }
     
@@ -362,10 +384,62 @@ def check2_0(customerId):
         'types': network_data
     }
 
+    lead_checks = lead_data['checks']
+    lead_checks[customerId] = lead_checks.get(customerId, [])
+    lead_checks[customerId].append({
+        'date': today_str,
+        'account_name': account_profile['name'],
+        'audit_id': audit_id
+    })
+
+    lead_ref.set({
+        'checks' : lead_checks
+    }, merge=True)
+
+    audit_data_ref.document(audit_id).set({
+        'data': json.dumps({
+            'response': response,
+            'account_profile': account_profile
+            }),
+        'date': today_str,
+        'customerId': customerId
+        })
+
     app.logger.info(flask.request.args.get('template', default = 'skip'))
+    # TODO store response to firestore
+
     if flask.request.args.get('template', default = 'skip') != 'skip':
-        return flask.render_template('index_new_1.html', data=response, profile=get_profile(customerId))
+        return flask.render_template('index_new_1.html', data=response, profile=account_profile, audit_id = audit_id)
     return flask.jsonify(response)
+
+@app.route('/audit/send/', methods=['POST'])
+def send_mail():
+    form = flask.request.form
+    audit_id = form.get('audit_id')
+    email = form.get('email')
+    app.logger.info(f" got request with email {form.get('email')}, id {audit_id}")
+    if audit_id is None or email is None:
+        return flask.jsonify({'error': 'broken email fields'}), 404
+    with app.app_context():
+        app.logger.info(f"sender is {app.config.get('MAIL_USERNAME')}")
+        msg = Message(subject="Clicks in Context Google Ads Audit",
+                        sender=app.config.get("MAIL_USERNAME"),
+                        recipients=[email], # replace with your email for testing
+                        body=f"Hello, you can get your report at {flask.url_for('restore_audit',audit_id=audit_id)}")
+        mail.send(msg)
+    return flask.jsonify({'res': 'ok', 'url':flask.url_for('restore_audit',audit_id=audit_id,  _external=True)}) # audit_id=form.get('id')
+
+@app.route('/audit/id/<audit_id>')
+def restore_audit(audit_id):
+    audit_data_ref = db.collection('audits')
+    audit_data = audit_data_ref.document(audit_id).get()
+    if not audit_data is None:
+        audit_data = audit_data_ref.document(audit_id).get().to_dict()
+        audit_data = json.loads(audit_data['data'])
+        app.logger.info(audit_data.keys())
+        return flask.render_template('index_new_1.html', data=audit_data['response'], profile=audit_data['account_profile'], audit_id = audit_id )
+    else:
+        return "No report forud for ID " + audit_id, 404
 
 @app.route('/audit/<customerId>/debug/<check_name>')
 def check2_0_debug(customerId,check_name):
@@ -398,6 +472,19 @@ def get_adwords_client():
     adwords_client = adwords.AdWordsClient(
         developer_token, oauth2_client, user_agent)
     return adwords_client
+
+def get_profile(clientId):
+    adwords_client = get_adwords_client()
+    adwords_client.SetClientCustomerId(clientId)
+    customer_service = adwords_client.GetService('CustomerService', version='v201809')
+    account = customer_service.getCustomers()
+
+
+    return {
+        'id': account[0]['customerId'],
+        'name': account[0]['descriptiveName'],
+        'currency': account[0]['currencyCode']
+        }
 
 def get_reports_rows(report_string):
     reader = csv.reader(report_string.split('\n'))

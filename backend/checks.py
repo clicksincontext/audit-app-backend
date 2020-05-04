@@ -10,7 +10,7 @@ import datetime
 PAGE_SIZE = 100
 CHANGE_LIMIT = 10
 
-def defauls_period():
+def defauls_period(n=89):
     day1 = datetime.datetime.today() - datetime.timedelta(days = 1)
     date90 = day1 - datetime.timedelta(days = 89)
     return {
@@ -19,6 +19,9 @@ def defauls_period():
     }
 
 DEFAULT_PERFOMANCE_PERIOD = defauls_period()
+
+FULL_YEAR_PERIOD = defauls_period(365)
+
 
 # check_log = logging.getLogger()
 
@@ -1127,6 +1130,35 @@ def account_stats(adwords_client, item, list=None):
     rows[-1][1] = "TOTAL"
     res = {}
     res['rows'] = rows
+    return res
+
+# @check_wrapper
+def account_stats_12months(adwords_client):
+    report_downloader = adwords_client.GetReportDownloader(version='v201809')
+
+    # Create report query.
+    report_query = (adwords.ReportQueryBuilder()
+                  .Select('AccountCurrencyCode', 'AdNetworkType1', 'Cost', 'Conversions', 'CostPerConversion', 'AverageCpc')
+                  .From('ACCOUNT_PERFORMANCE_REPORT')
+                  .During(**FULL_YEAR_PERIOD)
+                  .Build())
+    stream_data = report_downloader.DownloadReportAsStringWithAwql(
+        report_query, 'CSV', use_raw_enum_values=True, skip_report_header=True, skip_report_summary=False, skip_column_header=False)
+
+    rows = get_reports_rows(stream_data)
+    header = ['AccountCurrencyCode', 'AdNetworkType1', 'Cost', 'Conversions', 'CostPerConversion', 'AverageCpc']
+    rows[-1][1] = "TOTAL"
+    rows[-1][0] = rows[1][0]
+    res = {}
+    for row in rows[1:]:
+        row[2] = int(row[2])/1000000
+        row[4] = int(row[4])/1000000
+        row[5] = int(row[5])/1000000
+        res[row[1]] = {
+            'Cost': row[2],
+            'AverageCpc': row[5],
+            'CostPerConversion': row[4]
+        }
     return res
 
 

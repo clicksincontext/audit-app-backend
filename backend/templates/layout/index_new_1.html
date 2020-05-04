@@ -35,7 +35,8 @@
             <div class="row">
                 <div class="col-md-3 my-auto">
                     <div class="score-means">
-                        <a href="https://clicksincontext.com/adwords-audit-score" target="_blank">What does my score mean?</a>
+                        <a href="https://clicksincontext.com/adwords-audit-score" target="_blank">What does my score
+                            mean?</a>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -314,7 +315,8 @@
                 <div class="modal-body text-center">
                     <h6>Enter email and we'll sent a link to the report:</h6>
                     <form class="modal--custom__form" id="send-form" action="">
-                        <input class="modal--custom__form__input" type="email" placeholder="user@example.com" />
+                        <input class="modal--custom__form__input" type="email" name="email" placeholder="user@example.com" />
+                        <input type="hidden" name="audit_id" value="{{audit_id}}" />
                         <button class="button">Send</button>
                     </form>
                 </div>
@@ -397,7 +399,6 @@
 
             }
 
-
         }
     </script>
 
@@ -406,10 +407,30 @@
             print();
         });
         $('.pdf-btn')
-        .on('click', function () {
-            showPDF();
-        });
-        $('#send-form').on('submit', function () {
+            .on('click', function () {
+                showPDF();
+            });
+
+        $('#send-form').on('submit', function (e) {
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            console.log('form prevented')
+            var form = $(this);
+
+            var sendFormData = new URLSearchParams();
+
+            // var sendFormData = new URLSearchParams(form[0]);
+            form.serializeArray().map(function (input) {
+                sendFormData.append(input.name, input.value)
+                console.log(`appended ${input.name} of ${input.value}`)
+            })
+            fetch("{{url_for('send_mail')}}", {
+                method: 'post',
+                body: sendFormData,
+            })
+            .then(function () {
+                console.log('form was sent')
+              form.html("<p>A link to report was sent</p>")
+            });
             return false
         }) 
     </script>
@@ -439,7 +460,7 @@
             // For other browsers: 
             // Create a link pointing to the ObjectURL containing the blob.
             const data = window.URL.createObjectURL(newBlob);
-            var link = document.getElementById ('mprint');
+            var link = document.getElementById('mprint');
             link.href = data;
             link.download = "file.pdf";
             link.click();
@@ -453,7 +474,8 @@
         function showPDF() {
             var url = 'https://us-central1-cic-ads-audit-frb.cloudfunctions.net/html2pdf'
             if (document.location.host.match('localhost')) url = 'http://localhost:5001/cic-ads-audit-frb/us-central1/html2pdf'
-            var paramUrl = `${url}?url=${window.location.href}&session=${getCookie('session')}`.replace(/\#/g, '')
+            // var paramUrl = `${url}?url=${window.location.href}&session=${getCookie('session')}`.replace(/\#/g, '')
+            var paramUrl = `${url}?audit_id={{ audit_id }}` // + "{{ url_for('restore_audit', audit_id=audit_id,  _external=True) }}"
 
             fetch(paramUrl)
                 .then(r => r.blob())
