@@ -447,7 +447,7 @@ def send_mail():
         msg = Message(subject="Clicks in Context Google Ads Audit",
                         sender=app.config.get("MAIL_USERNAME"),
                         recipients=[email], # replace with your email for testing
-                        body=f"Hello, you can get your report at {flask.url_for('restore_audit',audit_id=audit_id)}")
+                        body=f"Hello, you can get your report at {flask.url_for('restore_audit',audit_id=audit_id, _external=True)}")
         mail.send(msg)
     return flask.jsonify({'res': 'ok', 'url':flask.url_for('restore_audit',audit_id=audit_id,  _external=True)}) # audit_id=form.get('id')
 
