@@ -123,7 +123,6 @@ def oauth_redirected_callback():
     if flask.request.url.startswith('http://'):
         os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-
     cb_scopes=[oauth2.GetAPIScope('adwords'),
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile']
@@ -251,10 +250,33 @@ for item in checks.check_list:
 def auth_redirect():
     flask.session.permanent = True
     app.permanent_session_lifetime = datetime.timedelta(days=1)
-    auth_url = getAuthUrl(flask.session)
-    app.logger.info(f"auth_url is {auth_url}")
+    # auth_url = getAuthUrl(flask.session)
+    local_proxy=False
+    redirect='oauth_callback'
+    m_scopes=[oauth2.GetAPIScope('adwords'),
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile']
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=m_scopes)
+
+    flow.redirect_uri = flask.request.url_root + redirect
+    if app.debug:
+        flow.redirect_uri = 'http://localhost:5000/' + redirect  # flask.url_for('oauth2callback')
+    if local_proxy:
+        flow.redirect_uri = 'http://localhost:8080/oauth-callback'
+
+    authorization_url, state = flow.authorization_url(
+          access_type='offline',
+          include_granted_scopes='true',  prompt='consent')
+    # Store the state so the callback can verify the auth server response.
+    flask.session['state'] = state
+    flask.session['fl_config'] = flow.client_config
+    flask.session['fl_client_type'] = flow.client_type
+    flask.session['fl_code_verifier'] = flow.code_verifier
+
+    app.logger.info(f"auth_url is {authorization_url}")
     app.logger.info(f"session keys are {flask.session.keys()}")
-    return flask.redirect(auth_url)
+    return flask.redirect(authorization_url)
 
 @app.route('/audit/dummy/<num>')
 def dummy(num):
