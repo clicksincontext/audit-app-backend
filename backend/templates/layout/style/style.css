@@ -85,6 +85,14 @@ a.pdf-btn{
     margin-top: 80px;
 }
 
+.title h3{
+    /* font-size: 40px; */
+    /* font-weight: 700; */
+    margin-bottom: 50px;
+    color: #353535;
+    margin-top: 32px;
+}
+
 .table-responsive{
     border: 1px solid #dddddd;
     border-radius: 6px;
@@ -286,7 +294,7 @@ canvas{
     height: 100%;
 }
 
-span#procent {
+span#procent, span#procent-search {
     display: block;
     position: absolute;
     left: 50%;
@@ -306,7 +314,7 @@ span#score {
     color: #353535;
 }
 
-span#procent::after {
+span#procent::after, span#procent-search::after {
     content: '%';
 }
 

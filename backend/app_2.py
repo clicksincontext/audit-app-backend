@@ -439,6 +439,7 @@ def send_mail():
     form = flask.request.form
     audit_id = form.get('audit_id')
     email = form.get('email')
+    account_name = form.get('account_name')
     app.logger.info(f" got request with email {form.get('email')}, id {audit_id}")
     if audit_id is None or email is None:
         return flask.jsonify({'error': 'broken email fields'}), 404
@@ -447,7 +448,11 @@ def send_mail():
         msg = Message(subject="Clicks in Context Google Ads Audit",
                         sender=app.config.get("MAIL_USERNAME"),
                         recipients=[email], # replace with your email for testing
-                        body=f"Hello, you can get your report at {flask.url_for('restore_audit',audit_id=audit_id, _external=True)}")
+                        # body=f"Hello, you can get your report at {flask.url_for('restore_audit',audit_id=audit_id, _external=True)}")
+                        body=f"Hi there, the Google Ads account {account_name} has been audited and here are the results!\n {flask.url_for('restore_audit',audit_id=audit_id, _external=True)}" +
+"\nIf you have any questions about this report just reply to this email and we'll help you out." + 
+"\n\nBest," +
+"\nThe ClicksInContext Team")
         mail.send(msg)
     return flask.jsonify({'res': 'ok', 'url':flask.url_for('restore_audit',audit_id=audit_id,  _external=True)}) # audit_id=form.get('id')
 

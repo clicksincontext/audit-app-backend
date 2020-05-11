@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Ads Audit: Select Account</title>
 </head>
+
 <body>
     <div id="app">
         <div class="select">
@@ -15,34 +17,85 @@
             <div id="client_list">
                 {% for mcc in data if mcc.canManageClients == True %}
                 <div class="account_block">
-                    <div>Accounts under {{ mcc.name }} master account:  </div>
+                    <div>Accounts under {{ mcc.name }} master account: </div>
                     {% for account in mcc.child  %}
                     <div class="child_accounts">
-                        <span><a href="{{url_for('check2_0', customerId = account.id, template='done')}}">{{account.name}} </a> :: {{account.id}} </span>
+                        <span><a href="{{url_for('check2_0', customerId = account.id, template='done')}}">{{account.name}}
+                            </a> :: {{account.id}} </span>
                     </div>
                     {% endfor %}
                 </div>
                 {% endfor %}
                 <div class="account_block">
-                    <div>Accounts with direct access:  </div>
+                    <div>Accounts with direct access: </div>
                     {% for account in data if account.canManageClients == False %}
                     <div class="child_accounts">
-                        <span><a href="{{url_for('check2_0', customerId = account.id)}}">{{account.name}} </a> :: {{account.id}} </span>
+                        <span><a href="{{url_for('check2_0', customerId = account.id)}}">{{account.name}} </a> ::
+                            {{account.id}} </span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
     </div>
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-container">
+
+                <p>Please wait, prepearing audit might take some time ...</p>
+                <div class="loading"></div>
+            </div>
+        </div>
+
+    </div>
 </body>
+<script>
+    var modal = document.getElementById("myModal");
+    // var btn = document.getElementById("test_click");
+    var links = document.querySelectorAll('.account_block a')
+    links.forEach(function (btn) {
+        btn.onclick = function (e) {
+            // e.preventDefault();
+            modal.style.display = "block";
+        }
+    })
+
+</script>
 <style>
     @import url('https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i&display=swap');
 
-    body{
+    body {
         font-family: 'Lato', sans-serif;
         font-size: 16px;
     }
-    #app{
+
+    .loading {
+        height: 0;
+        width: 0;
+        padding: 15px;
+        border: 6px solid #ccc;
+        border-right-color: #888;
+        border-radius: 22px;
+        -webkit-animation: rotate 1s infinite linear;
+        /* left, top and position just for the demo! */
+        position: relative;
+        left: 50%;
+        /* top: 50%; */
+    }
+
+    @-webkit-keyframes rotate {
+
+        /* 100% keyframe for  clockwise. 
+        use 0% instead for anticlockwise */
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    #app {
         font-family: 'Lato', sans-serif;
         /* font-family: 'Josefin Sans', sans-serif; */
         -webkit-font-smoothing: antialiased;
@@ -51,26 +104,77 @@
         color: #2c3e50;
         margin-top: 70px;
     }
-    #app img{
+
+    #app img {
         width: 140px
     }
-    h2{
+
+    h2 {
         font-size: 40px;
         font-weight: 700;
         margin-bottom: 50px;
         color: #353535;
         margin-top: 120px;
     }
+
     div#client_list {
         display: inline-block;
 
     }
+
     div.account_block {
         text-align: left;
-        font-size: 16px;
-    } 
+        font-size: 18px;
+    }
+
+    #client_list div:first-child {
+        padding-bottom: 18px;
+    }
+
     .child_accounts {
         padding-left: 25px;
     }
+
+    /* The Modal (background) */
+    .modal {
+        display: none;
+        /* Hidden by default */
+        position: fixed;
+        /* Stay in place */
+        z-index: 1;
+        /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* Full width */
+        height: 100%;
+        /* Full height */
+        overflow: auto;
+        /* Enable scroll if needed */
+        background-color: rgb(0, 0, 0);
+        /* Fallback color */
+        background-color: rgba(0, 0, 0, 0.4);
+        /* Black w/ opacity */
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        /* Could be more or less, depending on screen size */
+    }
+
+    .modal-container {
+        width: 50%;
+        margin: 0 auto;
+    }
+    .modal-container p {
+        text-align: center;
+    }
 </style>
+
 </html>

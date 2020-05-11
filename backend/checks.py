@@ -919,16 +919,33 @@ def top_placements(adwords_client, item, list=None):
     res = {}
     report_downloader = adwords_client.GetReportDownloader(version='v201809')
     report_query = (adwords.ReportQueryBuilder()
-                  .Select('Criteria','Impressions')
+                  .Select('Criteria','Impressions', 'Cost')
                   .From('PLACEMENT_PERFORMANCE_REPORT')
                   .Where('Impressions').GreaterThan(0) 
                   .During(**DEFAULT_PERFOMANCE_PERIOD)
                   .Build())
-    header = ['Criteria','Impressions']
+    header = ['Criteria','Impressions', 'Cost']
     stream_data = report_downloader.DownloadReportAsStringWithAwql(
         report_query, 'CSV', use_raw_enum_values=True, skip_report_header=True, skip_report_summary=True, skip_column_header=True)
     rows = get_reports_rows(stream_data)
-    rows = sorted(rows, key=lambda k:int(k[1]), reverse=True)[:10]
+    for row in rows:
+        row[2] = int(row[2]) / 1000000
+
+    agg_rows = []
+
+    for row in rows:
+        target_row = []
+        for agg_row in agg_rows:
+            if agg_row[0] == row[0]:
+                target_row = agg_row
+        if not target_row:
+            agg_rows.append(row)
+        else:
+            target_row[1] =int(target_row[1]) + int(row[1])
+            target_row[2] = target_row[2] + row[2] 
+
+
+    rows = sorted(agg_rows, key=lambda k:int(k[1]), reverse=True)[:10]
     # agg = {}
     # for row in rows:
     #     name = row[0]
@@ -977,13 +994,15 @@ def cr15_placements(adwords_client, item, list=None):
     res = {}
     report_downloader = adwords_client.GetReportDownloader(version='v201809')
     report_query = (adwords.ReportQueryBuilder()
-                  .Select('Criteria','Conversions', 'Clicks')
+                  .Select('Criteria','Conversions', 'Clicks', 'Impressions', 'Cost')
                   .From('PLACEMENT_PERFORMANCE_REPORT')
                   .Where('Impressions').GreaterThan(100)
+                  .Where('Clicks').GreaterThan(1)
+
                 #   .Where('Ctr').GreaterThan(100)
                   .During(**DEFAULT_PERFOMANCE_PERIOD)
                   .Build())
-    header = ['Criteria','Clicks', 'Impressions', 'Ctr']
+    header = ['Placement', 'Impressions', 'Clicks', 'Conversions', 'Conversion Rate %', 'Cost']
     stream_data = report_downloader.DownloadReportAsStringWithAwql(
         report_query, 'CSV', use_raw_enum_values=True, skip_report_header=True, skip_report_summary=True, skip_column_header=True)
     rows = get_reports_rows(stream_data)
@@ -993,12 +1012,12 @@ def cr15_placements(adwords_client, item, list=None):
     for row in rows:
         name = row[0]
         if not agg.get(name, False):
-            agg[name] = {'Conversions': 0.0, 'Clicks': 0.0}
+            agg[name] = {'Conversions': 0.0, 'Clicks': 0.0, 'Impressions':0.0, 'Cost': 0.0}
         agg[name]['Conversions'] += float(row[1])
         agg[name]['Clicks'] += int(row[2])
-    rows = [[placement_name, placement_data['Conversions'], placement_data['Clicks'], placement_data['Conversions']/placement_data['Clicks'] ] \
-        for placement_name, placement_data in agg.items() \
-        if  placement_data['Conversions']/placement_data['Clicks'] > 0.15]
+        agg[name]['Impressions'] += int(row[3])
+        agg[name]['Cost'] += (int(row[4])/1000000)
+    rows = [[placement_name, placement_data['Impressions'], placement_data['Clicks'], placement_data['Conversions'], placement_data['Conversions']/placement_data['Clicks'], placement_data['Cost']] for placement_name, placement_data in agg.items() if  placement_data['Conversions']/placement_data['Clicks'] > 0.15]
     res['flag'] = 'other'
     res['rows'] = [header] + rows if len(rows) > 0 else rows
 
@@ -1121,12 +1140,13 @@ def account_stats(adwords_client, item, list=None):
         report_query, 'CSV', use_raw_enum_values=True, skip_report_header=True, skip_report_summary=False, skip_column_header=False)
 
     rows = get_reports_rows(stream_data)
-    structure = {}
     header = ['AccountCurrencyCode', 'AdNetworkType1', 'Cost', 'Conversions', 'CostPerConversion', 'Ctr']
     for row in rows[1:]:
         row[2] = int(row[2])/1000000
         row[4] = int(row[4])/1000000
     # rows = [header] + rows
+    rows = [rows[0]] +  sorted(rows[1:-1], key=lambda k:k[2], reverse=True) + [rows[-1]]
+
     rows[-1][1] = "TOTAL"
     res = {}
     res['rows'] = rows
@@ -1171,7 +1191,8 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red':-20
+            'red':-5
+            # 'red':-20
         }
     },
     {
@@ -1182,7 +1203,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': -10,
-            'red':-20
+            'red':-5 #-20
         }
     },
     {
@@ -1193,7 +1214,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': -5,
-            'red':-20
+            'red':-5 #-20
         }
 
     },
@@ -1205,7 +1226,7 @@ check_list = [
         'score': {
             'green': 5,
             'amber': -5,
-            'red':-15
+            'red':-5 #-15
         }
     },
     {
@@ -1216,7 +1237,7 @@ check_list = [
         'score': {
             'green': 5,
             'amber': 0,
-            'red':-5
+            'red':-5 #-5
         }
     },
     {
@@ -1227,7 +1248,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 5,
-            'red':-15
+            'red':-5 #-15
         }
     },
     {
@@ -1238,7 +1259,7 @@ check_list = [
         'score': {
             'green': 5,
             'amber': 0,
-            'red':-10
+            'red':-5 #-10
         }
     },
     {
@@ -1249,7 +1270,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red':-10
+            'red':-5 #-10
         }
     },
     # {
@@ -1271,7 +1292,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red':-10
+            'red':-5 #-10
         }
     },
     {
@@ -1282,7 +1303,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 3,
-            'red':-10
+            'red':-5 #-10
         }
     },
     {
@@ -1293,7 +1314,7 @@ check_list = [
         'score': {
             'green': 5,
             'amber': 0,
-            'red':-5
+            'red':-5 #-5
         }
     },
     {
@@ -1304,7 +1325,7 @@ check_list = [
         'score': {
             'green': 5,
             'amber': 0,
-            'red':-10
+            'red':-5 #-10
         }
     },
     {
@@ -1315,7 +1336,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red':-10
+            'red':-5 #-10
         }
     },
     {
@@ -1327,7 +1348,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1340,7 +1361,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1352,7 +1373,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1365,7 +1386,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1378,7 +1399,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1390,7 +1411,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1409,7 +1430,7 @@ check_list = [
     },
     {
         'name': 'cr15_placements',
-        'description' :'Placements with 15%+ Conversion (probably not real conversions)',
+        'description' :'Placements with 15%+ Conversion Rate (possibly not real conversions)',
         'apply': cr15_placements, #display_ks_targeting
         'listed': True,
         'type': 'display',
@@ -1423,7 +1444,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
         {
@@ -1435,7 +1456,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
     {
@@ -1447,7 +1468,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red':-5 # -10
         }
     },
     {
@@ -1459,7 +1480,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     },
         {
@@ -1471,7 +1492,7 @@ check_list = [
         'score': {
             'green': 10,
             'amber': 0,
-            'red': -10
+            'red': -5 #-10
         }
     }
 

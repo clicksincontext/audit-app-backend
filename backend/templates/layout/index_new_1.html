@@ -74,13 +74,14 @@
     <!--Search Overall Audit Score End-->
 
 
-    <!--Search Audit Results Section Start-->
+    <!--Account Performance Data Start-->
 
     <section>
         <div class="container">
             <div class="row">
                 <div class="col-md-12 text-center title">
                     <h2>Account Performance Data</h2>
+                    <h3>Last 90 days</h3>
                 </div>
             </div>
             <div class="row">
@@ -92,6 +93,7 @@
                                     {% for name in data.results[-1].rows[0] %}
                                     <th scope="col"> {{  name }}</th>
                                     {% endfor %}
+                                    {% set curr_symbol = data.results[-1].rows[1][0] | replace("USD", "$") | replace ("EUR", "€") | replace("GBP", "£")  %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -99,10 +101,15 @@
                                 <tr>
                                     {% for value in row %}
                                     <td>
-                                        {% if '%' in data.results[-1].rows[0][loop.index0] %}
+                                        {% if 'Impr. (' in data.results[-1].rows[0][loop.index0] and row[1] != 'SEARCH'  %}
+                                        --
+                                        {% elif '%' in data.results[-1].rows[0][loop.index0] %}
                                         {% set float_value = value|float %}
                                         {% set value_100 = float_value*100 %}
-                                        {{ value_100 }}%
+                                        {{ '%0.2f'|format(value_100|float) }}%
+                                        <!-- value_100 % -->
+                                        {% elif 'Cost' in data.results[-1].rows[0][loop.index0] %}
+                                        {{curr_symbol}} {{'%0.2f'|format(value|float)}}
                                         {% elif value is number %}
                                         {{'%0.2f'|format(value|float)}}
                                         {% else %}
@@ -119,7 +126,10 @@
                                         {% if '%' in data.results[-1].rows[0][loop.index0] %}
                                         {% set float_value = value|float %}
                                         {% set value_100 = float_value*100 %}
-                                        {{ value_100 }}%
+                                        {{ '%0.2f'|format(value_100|float) }}%
+                                        <!-- value_100 % -->
+                                        {% elif 'Cost' in data.results[-1].rows[0][loop.index0] %}
+                                        {{curr_symbol}} {{'%0.2f'|format(value|float)}}
                                         {% elif value is number %}
                                         {{'%0.2f'|format(value|float)}}
                                         {% else %}
@@ -145,6 +155,18 @@
             <div class="row header">
                 <div class="col-md-12 text-center title">
                     <h2>Performed Search Checks</h2>
+                    <h3>Search Audit Score</h3>
+                </div>
+            </div>
+
+            <div class="row justify-content-center" id="search-canv">
+                <div class="col-md-6 my-auto">
+                    <div class="canvas-wrap">
+                        <canvas id="canvas-search"></canvas>
+                        <span id="procent-search"></span>
+                        <!-- ## data['total_score']## of ##data['max_score']## -->
+                        <span id="score">{{data.typed_score.search.score}} of {{data.typed_score.search.max_score}}</span>
+                    </div>
                 </div>
             </div>
 
@@ -209,7 +231,7 @@
         <div class="container">
             <div class="row header">
                 <div class="col-md-12 text-center title">
-                    <h2>Display Check List Results</h2>
+                    <h2>Performed Display Checks</h2>
                 </div>
             </div>
             <div class="row display-flex print">
@@ -253,7 +275,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12 text-center title">
-                    <h2>Display Audit Results</h2>
+                    <h2>Display Performamce Data</h2>
                 </div>
             </div>
 
@@ -280,12 +302,18 @@
                                 <tr>
                                     {% for value in  row %}
                                     <td>
-                                        {% if value is number %}
+
+                                        {% if '%' in report.rows[0][loop.index0] %}
+                                        {% set float_value = value|float %}
+                                        {% set value_100 = float_value*100 %}
+                                        {{ '%0.2f'|format(value_100|float) }}%
+                                        <!-- value_100 % -->
+                                        {% elif 'Cost' in report.rows[0][loop.index0] %}
+                                        {{curr_symbol}} {{'%0.2f'|format(value|float)}}
+                                        {% elif value is number %}
                                         {{'%0.2f'|format(value|float)}}
-                                        {% elif '%' in report.rows[0][loop.index0] %}
-                                        {{  '0:.0%' | format(value * 100|float)}}
                                         {% else %}
-                                        {{value}}
+                                        {{value | replace("USD", "$") | replace ("EUR", "€") | replace("GBP", "£") }}
                                         {% endif %}
                                     </td>
                                     {% endfor %}
@@ -317,6 +345,8 @@
                     <form class="modal--custom__form" id="send-form" action="">
                         <input class="modal--custom__form__input" type="email" name="email" placeholder="user@example.com" />
                         <input type="hidden" name="audit_id" value="{{audit_id}}" />
+                        <input type="hidden" name="account_name" value="{{profile.name}}" />
+
                         <button class="button">Send</button>
                     </form>
                 </div>
@@ -360,26 +390,59 @@
     <script>
 
         window.onload = function () {
-            var can = document.getElementById('canvas'),
-                spanProcent = document.getElementById('procent'),
-                c = can.getContext('2d');
+            var canTotal = document.getElementById('canvas'),
+                spanProcentTotal = document.getElementById('procent');
 
-            var posX = can.width / 2,
-                posY = can.height / 2,
-                fps = 1000 / 200,
-                procent = 0,
-                oneProcent = 360 / 100,
-                result = oneProcent * {{ data.total_score/data.max_score * 100}};
 
-            c.lineCap = 'round';
-            arcMove();
 
-            function arcMove() {
+            arcMove(canTotal, spanProcentTotal, {{ data.total_score/data.max_score * 100}} );
+
+            {% if 'typed_score' in data and 'search' in data['typed_score']%}
+            var canSearch =document.getElementById('canvas-search'),
+            spanProcentSearch = document.getElementById('procent-search');
+            arcMove(canSearch, spanProcentSearch, {{ data.typed_score.search.score/data.typed_score.search.max_score * 100 }} );
+
+            {% endif %}
+
+            function arcMove(can, spanProcent, resValue) {
+                var posX = can.width / 2,
+                    posY = can.height / 2,
+                    fps = 1000 / 200,
+                    procent = 0,
+                    oneProcent = 360 / 100,
+                    result = oneProcent * resValue,
+                    startAngle =  270 //180 + 45
+                var mediaQuery = window.matchMedia('print');
                 var deegres = 0;
-                var acrInterval = setInterval(function () {
-                    deegres += 1;
+                c = can.getContext('2d');
+                c.lineCap = 'round';
+                if (mediaQuery.matches) {
+                    var acrInterval = setInterval(function () {
+                            deegres += 1;
+                        c.clearRect(0, 0, can.width, can.height);
+                        procent = deegres / oneProcent;
+
+                        spanProcent.innerHTML = procent.toFixed();
+
+                        c.beginPath();
+                        // c.arc(posX, posY, 70, (Math.PI / 180) * 270, (Math.PI / 180) * (270 + 360));
+                        c.arc(posX, posY, 70, (Math.PI / 180) * startAngle, (Math.PI / 180) * (startAngle + 360));
+                        c.strokeStyle = '#f2f2f2';
+                        c.lineWidth = '6';
+                        c.stroke();
+
+                        c.beginPath();
+                        c.strokeStyle = '#fbcd3b';
+                        c.lineWidth = '6';
+                        // c.arc(posX, posY, 70, (Math.PI / 180) * 270, (Math.PI / 180) * (270 + deegres));
+                        c.arc(posX, posY, 70, (Math.PI / 180) * startAngle, (Math.PI / 180) * (startAngle + deegres));
+                        c.stroke();
+                        if (deegres >= result) clearInterval(acrInterval);
+                    }, fps);
+                } else {
                     c.clearRect(0, 0, can.width, can.height);
-                    procent = deegres / oneProcent;
+
+                    procent = resValue;
 
                     spanProcent.innerHTML = procent.toFixed();
 
@@ -392,10 +455,10 @@
                     c.beginPath();
                     c.strokeStyle = '#fbcd3b';
                     c.lineWidth = '6';
-                    c.arc(posX, posY, 70, (Math.PI / 180) * 270, (Math.PI / 180) * (270 + deegres));
+                    // c.arc(posX, posY, 70, (Math.PI / 180) * 270, (Math.PI / 180) * (270 + oneProcent * {{ data.total_score/data.max_score * 100}} ));
+                    c.arc(posX, posY, 70, (Math.PI / 180) * startAngle, (Math.PI / 180) * (startAngle + oneProcent * resValue ));
                     c.stroke();
-                    if (deegres >= result) clearInterval(acrInterval);
-                }, fps);
+                }
 
             }
 
