@@ -276,6 +276,7 @@ def auth_redirect():
 
     app.logger.info(f"auth_url is {authorization_url}")
     app.logger.info(f"session keys are {flask.session.keys()}")
+    # return flask.jsonify({'url': authorization_url})
     return flask.redirect(authorization_url)
 
 @app.route('/audit/dummy/<num>')

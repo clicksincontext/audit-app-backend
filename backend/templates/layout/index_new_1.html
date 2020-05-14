@@ -5,6 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" href="https://clicksincontext.com/wp-content/uploads/2017/07/ClicksInContext-Favicon.png" type="image/x-icon" />
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style/bootstrap/bootstrap.min.css') }}">
@@ -21,6 +22,7 @@
 </head>
 
 <body id="content">
+    {% include 'gtm.html'%}
 
 
     <!--Search Overall Audit Score Start-->
@@ -44,7 +46,7 @@
                         <canvas id="canvas"></canvas>
                         <span id="procent"></span>
                         <!-- ## data['total_score']## of ##data['max_score']## -->
-                        <span id="score">{{data.total_score}} of {{data.max_score}}</span>
+                        <span class="audit_score">{{data.total_score}} of {{data.max_score}}</span>
                     </div>
                 </div>
                 <div class="col-md-3 text-right my-auto">
@@ -165,7 +167,7 @@
                         <canvas id="canvas-search"></canvas>
                         <span id="procent-search"></span>
                         <!-- ## data['total_score']## of ##data['max_score']## -->
-                        <span id="score">{{data.typed_score.search.score}} of {{data.typed_score.search.max_score}}</span>
+                        <span class="audit_score">{{data.typed_score.search.score}} of {{data.typed_score.search.max_score}}</span>
                     </div>
                 </div>
             </div>
@@ -232,8 +234,21 @@
             <div class="row header">
                 <div class="col-md-12 text-center title">
                     <h2>Performed Display Checks</h2>
+                    <h3>Display Audit Score</h3>
                 </div>
             </div>
+
+            <div class="row justify-content-center" id="display-canv">
+                <div class="col-md-6 my-auto">
+                    <div class="canvas-wrap">
+                        <canvas id="canvas-display"></canvas>
+                        <span id="procent-display"></span>
+                        <!-- ## data['total_score']## of ##data['max_score']## -->
+                        <span class="audit_score">{{data.typed_score.display.score}} of {{data.typed_score.display.max_score}}</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="row display-flex print">
                 {% set d_imgs = [
                 "img/icons/graph.svg",
@@ -401,6 +416,11 @@
             var canSearch =document.getElementById('canvas-search'),
             spanProcentSearch = document.getElementById('procent-search');
             arcMove(canSearch, spanProcentSearch, {{ data.typed_score.search.score/data.typed_score.search.max_score * 100 }} );
+            {% endif %}
+            {% if 'CONTENT' in data.types %}
+            var canDisplay =document.getElementById('canvas-display'),
+            procentDisplay = document.getElementById('procent-display');
+            arcMove (canDisplay, procentDisplay, {{ data.typed_score.display.score/data.typed_score.display.max_score * 100 }} );
 
             {% endif %}
 
