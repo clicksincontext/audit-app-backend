@@ -348,7 +348,8 @@ def check2_0(customerId):
     'currency':     account_profile['currency']
     }
             
-
+    for item in account_12mth_report_data:
+        app.logger.info(f"{item}: {account_12mth_report_data[item]}")
     account_12mth_report_data.update(extra_info)
     account_data_ref.set(account_12mth_report_data)
     
@@ -396,8 +397,10 @@ def check2_0(customerId):
             results.append({ 'name': item.get('name',  'unknown'), 'error': 'no data' })
     app.logger.info('async jobs ready')
 
+    # TODO Convert to account_stats_12months
     if account_stats is not None:
         network_data = { row[1]:row[2] for row in account_stats }
+    
     
     response = {
         'results': results,

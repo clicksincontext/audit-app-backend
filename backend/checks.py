@@ -12,10 +12,10 @@ CHANGE_LIMIT = 10
 
 def defauls_period(n=89):
     day1 = datetime.datetime.today() - datetime.timedelta(days = 1)
-    date90 = day1 - datetime.timedelta(days = 89)
+    dateN = day1 - datetime.timedelta(days = n)
     return {
         'end_date': day1.strftime('%Y%m%d'),
-        'start_date': date90.strftime('%Y%m%d')
+        'start_date': dateN.strftime('%Y%m%d')
     }
 
 DEFAULT_PERFOMANCE_PERIOD = defauls_period()
@@ -1166,7 +1166,7 @@ def account_stats_12months(adwords_client):
         report_query, 'CSV', use_raw_enum_values=True, skip_report_header=True, skip_report_summary=False, skip_column_header=False)
 
     rows = get_reports_rows(stream_data)
-    header = ['AccountCurrencyCode', 'AdNetworkType1', 'Cost', 'Conversions', 'CostPerConversion', 'AverageCpc']
+    # header = ['AccountCurrencyCode', 'AdNetworkType1', 'Cost', 'Conversions', 'CostPerConversion', 'AverageCpc']
     rows[-1][1] = "TOTAL"
     rows[-1][0] = rows[1][0]
     res = {}
@@ -1376,19 +1376,19 @@ check_list = [
             'red': -5 #-10
         }
     },
-    {
-        'name': 'location_interested',
-        'description' :'Location targeting set to "physically in" location, not "interested in" default',
-        'apply': location_interested, #extensions_in_use
-        'imagename': '16.png',
-        'listed': True,
-        'type': 'account-wide',
-        'score': {
-            'green': 10,
-            'amber': 0,
-            'red': -5 #-10
-        }
-    },
+    # {
+    #     'name': 'location_interested',
+    #     'description' :'Location targeting set to "physically in" location, not "interested in" default',
+    #     'apply': location_interested, #extensions_in_use
+    #     'imagename': '16.png',
+    #     'listed': True,
+    #     'type': 'account-wide',
+    #     'score': {
+    #         'green': 10,
+    #         'amber': 0,
+    #         'red': -5 #-10
+    #     }
+    # },
     {
         'name': 'extensions_in_use',
         'description' :'Extensions in use (min 3x types)',
