@@ -1364,18 +1364,18 @@ check_list = [
             'red': -5 #-10
         }
     },
-    {
-        'name': 'has_customizers',
-        'description' :'Account has ad customized feeds',
-        'apply': has_customizers, #location_interested
-        'imagename': '14.png',
-        'type': 'search',
-        'score': {
-            'green': 10,
-            'amber': 0,
-            'red': -5 #-10
-        }
-    },
+    # {
+    #     'name': 'has_customizers',
+    #     'description' :'Account has ad customized feeds',
+    #     'apply': has_customizers, #location_interested
+    #     'imagename': '14.png',
+    #     'type': 'search',
+    #     'score': {
+    #         'green': 10,
+    #         'amber': 0,
+    #         'red': -5 #-10
+    #     }
+    # },
     # {
     #     'name': 'location_interested',
     #     'description' :'Location targeting set to "physically in" location, not "interested in" default',

@@ -227,7 +227,8 @@ def select_ads_account():
                         'canManageClients': managed_account['canManageClients']
                     })
         render_list.append(listed_account)
-
+    if flask.request.args.get('json', default = 'skip') == 'true':
+        return flask.jsonify(render_list)
     return flask.render_template('select_new.html',
         result=json.dumps(render_list, sort_keys = False, indent = 2),
         data = render_list,
@@ -235,6 +236,8 @@ def select_ads_account():
 
 
 import checks
+
+import protected
 
 with open('texts.json') as f:
     text_updates = json.load(f)
@@ -248,6 +251,7 @@ for item in checks.check_list:
 
 @app.route('/start_audit')
 def auth_redirect():
+    app.logger.info('got there')
     flask.session.permanent = True
     app.permanent_session_lifetime = datetime.timedelta(days=1)
     # auth_url = getAuthUrl(flask.session)
@@ -292,17 +296,31 @@ def dummy(num):
 def send_cookie():
     return f"{flask.request.cookies}"
 
+"""
+CORE AUDTIT SCRIPT
+"""
+
 @app.route('/audit/<customerId>')
 def check2_0(customerId):
+    user = flask.session.get('user')
+    if user is None:
+        return "Session cookie is corrupted", 404
 
+    app.logger.info(f"check customerId in protected.id_list is {int(customerId) in protected.id_list}")
+
+    # return 'done', 404
+    protected_emails = ['ppc@clicksincontext.com', 'daniel@clicksincontext.com']
+
+    if (int(customerId) in protected.id_list) and (not user['email'] in protected_emails):
+        # flash('You were successfully logged in')
+        #     return redirect(url_for('index'))
+        flask.flash(f"Hi {user['name']}, this account appears to be in our master account - we can go one better for our clients and give you a full video audit of your account if you have any concerns. Just contact your Account Manager to arrange it")
+        return flask.redirect('/select_account')
     app.logger.info(f"starting check for customer {customerId}")
     adwords_client = get_adwords_client()
 
     today_str = datetime.datetime.today().strftime('%Y-%m-%d')
 
-    user = flask.session.get('user')
-    if user is None:
-        return "Session cookie is corrupted", 404
 
     # Reference to firebase user document
     audit_id = str(datetime.datetime.utcnow().timestamp()) + '.' + customerId
@@ -397,7 +415,6 @@ def check2_0(customerId):
             results.append({ 'name': item.get('name',  'unknown'), 'error': 'no data' })
     app.logger.info('async jobs ready')
 
-    # TODO Convert to account_stats_12months
     if account_stats is not None:
         network_data = { row[1]:row[2] for row in account_stats }
     
@@ -457,7 +474,10 @@ def send_mail():
 "\nIf you have any questions about this report just reply to this email and we'll help you out." + 
 "\n\nBest," +
 "\nThe ClicksInContext Team")
-        mail.send(msg)
+        if not app.debug:
+            mail.send(msg)
+        else:
+            app.logger.info(msg)
     return flask.jsonify({'res': 'ok', 'url':flask.url_for('restore_audit',audit_id=audit_id,  _external=True)}) # audit_id=form.get('id')
 
 @app.route('/audit/id/<audit_id>')
