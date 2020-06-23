@@ -309,7 +309,7 @@ def check2_0(customerId):
     app.logger.info(f"check customerId in protected.id_list is {int(customerId) in protected.id_list}")
 
     # return 'done', 404
-    protected_emails = ['ppc@clicksincontext.com', 'daniel@clicksincontext.com']
+    protected_emails = ['ppc@clicksincontext.com', 'daniel@clicksincontext.com', 'bulakh@ppchead.com']
 
     if (int(customerId) in protected.id_list) and (not user['email'] in protected_emails):
         # flash('You were successfully logged in')

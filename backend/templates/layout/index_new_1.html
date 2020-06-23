@@ -18,7 +18,7 @@
     <script src="{{ url_for('static', filename='html2pdf.bundle.js')}}"></script>
 
 
-    <title>Adwords Audit DEV</title>
+    <title>Google Ads Audit Score</title>
 </head>
 
 <body id="content">
@@ -46,7 +46,18 @@
                         <canvas id="canvas"></canvas>
                         <span id="procent"></span>
                         <!-- ## data['total_score']## of ##data['max_score']## -->
-                        <span class="audit_score">{{data.total_score}} of {{data.max_score}}</span>
+                        {% set overall_score = data['typed_score']['account-wide']['score'] %}
+                        {% set overall_max_score = data['typed_score']['account-wide']['max_score'] %}
+                        {% if 'SEARCH' in data.types  %}
+                            {% set overall_score = overall_score + data['typed_score']['search']['score']  %}
+                            {% set overall_max_score =overall_max_score  +  data['typed_score']['search']['max_score']  %}
+                        {% endif %}
+                        {% if 'CONTENT' in data.types  %}
+                        {% set overall_score =  overall_score + data['typed_score']['display']['score']  %}
+                        {% set overall_max_score =  overall_max_score + data['typed_score']['display']['max_score']  %}
+                        {% endif %}
+                        <span class="audit_score">{{overall_score}} of {{overall_max_score}}</span>
+                        <!-- data.total_score  data.max_score -->
                     </div>
                 </div>
                 <div class="col-md-3 text-right my-auto">
@@ -227,7 +238,7 @@
     </section>
     <!--List Of Bits End-->
 
-
+    {% if 'CONTENT' in data.types %}
     <!--Display Audit Results Start-->
     <section class="bits">
         <div class="container">
@@ -290,7 +301,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12 text-center title">
-                    <h2>Display Performamce Data</h2>
+                    <h2>Display Performance Data</h2>
                 </div>
             </div>
 
@@ -343,7 +354,7 @@
         </div>
     </section>
     <!--Display Audit Results End-->
-
+    {% endif %}
 
     <!-- share-reportModal -->
     <div class="modal modal--custom fade" id="share-reportModal" tabindex="-1" role="dialog"
@@ -410,7 +421,7 @@
 
 
 
-            arcMove(canTotal, spanProcentTotal, {{ data.total_score/data.max_score * 100}} );
+            arcMove(canTotal, spanProcentTotal, {{ overall_score/overall_max_score * 100}} );
 
             {% if 'typed_score' in data and 'search' in data['typed_score']%}
             var canSearch =document.getElementById('canvas-search'),
@@ -430,7 +441,7 @@
                     fps = 1000 / 200,
                     procent = 0,
                     oneProcent = 360 / 100,
-                    result = oneProcent * resValue,
+                    result = (resValue > 0 ) ? oneProcent * resValue : oneProcent * 0,
                     startAngle =  270 //180 + 45
                 var mediaQuery = window.matchMedia('print');
                 var deegres = 0;
